@@ -4,27 +4,40 @@
 // swiftformat:disable all
 // Generated using tuist — https://github.com/tuist/tuist
 
+
+
 #if os(macOS)
-  import AppKit
-#elseif os(iOS)
-  import UIKit
-#elseif os(tvOS) || os(watchOS)
-  import UIKit
+#if hasFeature(InternalImportsByDefault)
+public import AppKit
+#else
+import AppKit
 #endif
+#else
+#if hasFeature(InternalImportsByDefault)
+public import UIKit
+#else
+import UIKit
+#endif
+#endif
+
 #if canImport(SwiftUI)
-  import SwiftUI
+#if hasFeature(InternalImportsByDefault)
+public import SwiftUI
+#else
+import SwiftUI
+#endif
 #endif
 
 // MARK: - Asset Catalogs
 
-public enum AppAsset: Sendable {
-  public static let accentColor = AppColors(name: "AccentColor")
-  public static let splashBack = AppImages(name: "SplashBack")
+public enum GoolbitgIOSAsset: Sendable {
+  public static let accentColor = GoolbitgIOSColors(name: "AccentColor")
+  public static let splashBack = GoolbitgIOSImages(name: "SplashBack")
 }
 
 // MARK: - Implementation Details
 
-public final class AppColors: Sendable {
+public final class GoolbitgIOSColors: Sendable {
   public let name: String
 
   #if os(macOS)
@@ -53,9 +66,9 @@ public final class AppColors: Sendable {
   }
 }
 
-public extension AppColors.Color {
+public extension GoolbitgIOSColors.Color {
   @available(iOS 11.0, tvOS 11.0, watchOS 4.0, macOS 10.13, visionOS 1.0, *)
-  convenience init?(asset: AppColors) {
+  convenience init?(asset: GoolbitgIOSColors) {
     let bundle = Bundle.module
     #if os(iOS) || os(tvOS) || os(visionOS)
     self.init(named: asset.name, in: bundle, compatibleWith: nil)
@@ -70,14 +83,14 @@ public extension AppColors.Color {
 #if canImport(SwiftUI)
 @available(iOS 13.0, tvOS 13.0, watchOS 6.0, macOS 10.15, visionOS 1.0, *)
 public extension SwiftUI.Color {
-  init(asset: AppColors) {
+  init(asset: GoolbitgIOSColors) {
     let bundle = Bundle.module
     self.init(asset.name, bundle: bundle)
   }
 }
 #endif
 
-public struct AppImages: Sendable {
+public struct GoolbitgIOSImages: Sendable {
   public let name: String
 
   #if os(macOS)
@@ -112,17 +125,17 @@ public struct AppImages: Sendable {
 #if canImport(SwiftUI)
 @available(iOS 13.0, tvOS 13.0, watchOS 6.0, macOS 10.15, visionOS 1.0, *)
 public extension SwiftUI.Image {
-  init(asset: AppImages) {
+  init(asset: GoolbitgIOSImages) {
     let bundle = Bundle.module
     self.init(asset.name, bundle: bundle)
   }
 
-  init(asset: AppImages, label: Text) {
+  init(asset: GoolbitgIOSImages, label: Text) {
     let bundle = Bundle.module
     self.init(asset.name, bundle: bundle, label: label)
   }
 
-  init(decorative asset: AppImages) {
+  init(decorative asset: GoolbitgIOSImages) {
     let bundle = Bundle.module
     self.init(decorative: asset.name, bundle: bundle)
   }

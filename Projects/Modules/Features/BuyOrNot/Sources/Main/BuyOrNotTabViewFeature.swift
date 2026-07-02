@@ -302,7 +302,8 @@ extension BuyOrNotTabViewFeature {
                 }
                 Logger.debug("삭제 요청: \(model.id)")
                 state.loading = true
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager, model, idx] send in
                     try await networkManager.requestNotDtoNetwork(
                         router: BuyOrNotRouter.buyOrNotDelete(postID: model.id),
                         ifRefreshNeed: true
@@ -321,7 +322,8 @@ extension BuyOrNotTabViewFeature {
 
             case let .featureEvent(.requestReport(id, reason)):
                 state.loading = true
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager, id, reason] send in
                     try await networkManager.requestNotDtoNetwork(
                         router: BuyOrNotRouter.buyOrNotReport(postID: id, reason: reason.reason),
                         ifRefreshNeed: true
@@ -351,7 +353,8 @@ extension BuyOrNotTabViewFeature {
             // MARK: - FeatureEvent (채팅 이동)
 
             case let .featureEvent(.requestUserInfoAfterMoveToChatting(item)):
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager, item] send in
                     let result = try await networkManager.requestNetworkWithRefresh(
                         dto: UserInfoDTO.self,
                         router: UserRouter.currentUserInfos
@@ -383,15 +386,18 @@ extension BuyOrNotTabViewFeature {
             case let .featureEvent(.resultBuyOrNotList(paging, models)):
                 state.buyOrNotPagingObj = paging
                 state.currentList = models
+                state.currentIndex = 0
                 state.currentMode = models.isEmpty ? .empty : .on
                 state.pagingTrigger = models.isEmpty
 
             case let .featureEvent(.resultAppendBuyOrNotList(paging, models)):
                 state.buyOrNotPagingObj = paging
                 state.currentList.append(contentsOf: models)
+                state.currentIndex = clampedCurrentIndex(state.currentIndex, count: state.currentList.count)
                 state.pagingTrigger = models.isEmpty
 
             case let .featureEvent(.resultVote(model, index)):
+                guard state.currentList.indices.contains(index) else { return .none }
                 state.currentList[index].goodVoteCount = String(model.goodVoteCount)
                 state.currentList[index].badVoteCount = String(model.badVoteCount)
 
@@ -441,9 +447,10 @@ extension BuyOrNotTabViewFeature {
 
             case let .bindingCurrentList(currentList):
                 state.currentList = currentList
+                state.currentIndex = clampedCurrentIndex(state.currentIndex, count: currentList.count)
 
             case let .bindingCurrentIndex(currentIndex):
-                state.currentIndex = currentIndex
+                state.currentIndex = clampedCurrentIndex(currentIndex, count: state.currentList.count)
                 guard !state.currentList.isEmpty, currentIndex > 0 else { return .none }
 
                 if currentIndex > state.currentList.count - 2, !state.pagingTrigger {
@@ -484,6 +491,7 @@ extension BuyOrNotTabViewFeature {
                 case .buyOrNot:
                     state.buyOrNotPagingObj = obj
                     state.currentList.removeAll()
+                    state.currentIndex = 0
                     state.currentMode = .load
                     return .send(.featureEvent(.requestBuyOrNotList(obj)))
                 case .records:
@@ -518,7 +526,8 @@ extension BuyOrNotTabViewFeature {
         vote: BuyOrNotVote,
         index: Int
     ) -> Effect<Action> {
-        .run { send in
+        let networkManager = self.networkManager
+        return .run { [networkManager, entity, vote, index] send in
             let result = try await networkManager.requestNetworkWithRefresh(
                 dto: BuyOrNotVoteDTO.self,
                 router: BuyOrNotRouter.buyOrNotVote(
@@ -548,9 +557,11 @@ extension BuyOrNotTabViewFeature {
     private func fetchBuyOrNotList(
         obj: BuyOrNotPagingObj,
         priority: TaskPriority? = nil,
-        toEvent: @escaping (BuyOrNotPagingObj, [BuyOrNotCardViewEntity]) -> FeatureEvent
+        toEvent: @escaping @Sendable (BuyOrNotPagingObj, [BuyOrNotCardViewEntity]) -> FeatureEvent
     ) -> Effect<Action> {
-        .run(priority: priority) { send in
+        let networkManager = self.networkManager
+        let buyOrNotMapper = self.buyOrNotMapper
+        return .run(priority: priority) { [networkManager, buyOrNotMapper, obj, toEvent] send in
             let result = try await networkManager.requestNetworkWithRefresh(
                 dto: BuyOrNotPagedDTO<BuyOrNotDTO>.self,
                 router: BuyOrNotRouter.buyOtNots(
@@ -578,9 +589,11 @@ extension BuyOrNotTabViewFeature {
         priority: TaskPriority? = nil,
         userID: String?,
         userName: String?,
-        toEvent: @escaping (String, String, BuyOrNotPagingObj, [ChatRoomCardEntity]) -> FeatureEvent
+        toEvent: @escaping @Sendable (String, String, BuyOrNotPagingObj, [ChatRoomCardEntity]) -> FeatureEvent
     ) -> Effect<Action> {
-        .run(priority: priority) { send in
+        let networkManager = self.networkManager
+        let chatRepository = self.chatRepository
+        return .run(priority: priority) { [networkManager, chatRepository, obj, userID, userName, toEvent] send in
             let resolvedUserID: String
             let resolvedUserName: String
 
@@ -648,6 +661,11 @@ extension BuyOrNotTabViewFeature {
         }
     }
 
+    private func clampedCurrentIndex(_ index: Int, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        return min(max(index, 0), count - 1)
+    }
+
     /// 포스트 미존재 공통 Alert
     private static var postNotFoundAlert: GBAlertViewComponents {
         GBAlertViewComponents(
@@ -664,7 +682,7 @@ extension BuyOrNotTabViewFeature {
 }
     
 
-public struct BuyOrNotPagingObj: Equatable, Hashable {
+public struct BuyOrNotPagingObj: Equatable, Hashable, Sendable {
     var totalSize = 0
     /// 페이지 번호
     var page: Int

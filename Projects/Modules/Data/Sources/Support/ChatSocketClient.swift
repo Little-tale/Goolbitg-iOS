@@ -95,23 +95,17 @@ public actor ChatSocketClient {
                 if Task.isCancelled { return }
                 
                 for await event in eventStream {
-                    if let firstItem = event.items.first,
-                       let dict = firstItem as? [String: Any],
-                       let dto = ChatSocketClient.decodeChatMessageDTO(from: dict) {
+                    if let dto = ChatSocketClient.decodeChatMessageDTO(from: event.body) {
                         let entity = mapper.map(dto: dto)
                         #if DEBUG
-                        print("📩 ChatSocketClient received raw dict: \(dict)")
+                        print("📩 ChatSocketClient received raw body: \(event.body)")
                         print("📩 ChatSocketClient sentDateTime raw: \(dto.sentDateTime)")
                         print("📩 ChatSocketClient parsed sentAt: \(String(describing: entity.sentAt))")
                         #endif
                         continuation.yield(entity)
                     } else {
                         #if DEBUG
-                        if let firstItem = event.items.first {
-                            print("⚠️ ChatSocketClient failed to decode incoming message: \(firstItem)")
-                        } else {
-                            print("⚠️ ChatSocketClient received empty event items for: \(event.name)")
-                        }
+                        print("⚠️ ChatSocketClient failed to decode incoming message: \(event.body)")
                         #endif
                     }
                 }
@@ -127,8 +121,8 @@ public actor ChatSocketClient {
     public func sendMessage(_ request: ChatSendRequestDTO) async -> Bool {
         guard let endpoint else { return false }
         let sendDest = endpoint.sendDestination
-        let payload = mapper.mapToOutboundPayload(dto: request)
-        return await socketManager.emit(event: sendDest, items: [payload])
+        guard let body = ChatSocketClient.encodeChatSendRequest(request) else { return false }
+        return await socketManager.emit(event: sendDest, body: body)
     }
 
     // MARK: - Lifecycle & Errors
@@ -168,6 +162,16 @@ public actor ChatSocketClient {
         if let n = any as? NSNumber { return n.intValue }
         if let s = any as? String { return Int(s) }
         return nil
+    }
+
+    static func decodeChatMessageDTO(from body: String) -> ChatMessageDTO? {
+        guard let data = body.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(ChatMessageDTO.self, from: data)
+    }
+
+    static func encodeChatSendRequest(_ request: ChatSendRequestDTO) -> String? {
+        guard let data = try? JSONEncoder().encode(request) else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 }
 

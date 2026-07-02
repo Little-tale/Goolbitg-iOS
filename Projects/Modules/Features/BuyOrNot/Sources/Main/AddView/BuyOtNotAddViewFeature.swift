@@ -12,7 +12,7 @@ import Domain
 import Data
 
 
-public enum BuyOrNotAddOrModify: Equatable, Hashable {
+public enum BuyOrNotAddOrModify: Equatable, Hashable, Sendable {
     case add
     case modifier(BuyOrNotCardViewEntity, idx: Int)
     case modifierFromChat(BuyOrNotCardViewEntity)
@@ -172,7 +172,11 @@ extension BuyOrNotAddViewFeature {
                    state.currentOkButtonState,
                    let price {
                     state.loading = true
-                    return .run { [state] send in
+                    let itemText = state.itemText
+                    let buyText = state.buyText
+                    let notBuyText = state.notBuyText
+                    let networkManager = self.networkManager
+                    return .run { [networkManager, imgData, price, itemText, buyText, notBuyText] send in
                         
                         /// ImageUpload
                         let imageResult = try await networkManager.uplaodMultipartRequest(
@@ -184,11 +188,11 @@ extension BuyOrNotAddViewFeature {
                         )
                         
                         let requestDTO = BuyOrNotRequestModel(
-                            productName: state.itemText,
+                            productName: itemText,
                             productPrice: price,
                             productImageUrl: imageResult.url,
-                            goodReason: state.buyText,
-                            badReason: state.notBuyText
+                            goodReason: buyText,
+                            badReason: notBuyText
                         )
                         
                         let _ = try await networkManager.requestNetworkWithRefresh(
@@ -217,13 +221,18 @@ extension BuyOrNotAddViewFeature {
                         return .none
                     }
                     state.loading = true
-                    return .run { [state] send in
+                    let itemText = state.itemText
+                    let buyText = state.buyText
+                    let notBuyText = state.notBuyText
+                    let networkManager = self.networkManager
+                    let buyOrNotMapper = self.buyOrNotMapper
+                    return .run { [networkManager, buyOrNotMapper, model, imageURLString, price, itemText, buyText, notBuyText] send in
                         let requestDTO = BuyOrNotRequestModel(
-                            productName: state.itemText,
+                            productName: itemText,
                             productPrice: price,
                             productImageUrl: imageURLString,
-                            goodReason: state.buyText,
-                            badReason: state.notBuyText
+                            goodReason: buyText,
+                            badReason: notBuyText
                         )
                         
                         let modify = try await networkManager.requestNetworkWithRefresh(dto: BuyOrNotDTO.self, router: BuyOrNotRouter.buyOtNotsModify(
@@ -360,13 +369,23 @@ extension BuyOrNotAddViewFeature {
 extension BuyOrNotAddViewFeature {
     
     private func checkAll(state: State) -> EffectOf<Self> {
+        let input = ValidationInput(
+            itemText: state.itemText,
+            priceText: state.priceText,
+            buyText: state.buyText,
+            notBuyText: state.notBuyText,
+            currentImageData: state.currentImageData,
+            ifImageURL: state.ifImageURL,
+            isImageProcessing: state.isImageProcessing,
+            currentOkButtonState: state.currentOkButtonState
+        )
         return .concatenate([
             .cancel(id: CancelID.checkAll),
-            .run { [state] send in
+            .run { [input] send in
                 try? await Task.sleep(for: .seconds(0.4))
-                let newValue: Bool = _checkAll(state: state)
+                let newValue: Bool = Self._checkAll(input: input)
                 
-                if state.currentOkButtonState != newValue {
+                if input.currentOkButtonState != newValue {
                     await send(.featureEvent(.setCurrentOkButtonState(newValue)))
                 }
             }
@@ -374,23 +393,15 @@ extension BuyOrNotAddViewFeature {
         .cancellable(id: CancelID.checkAll)
     }
     
-    private func _checkAll(state: State) -> Bool {
-        let itemText = state.itemText
-        let priceText = state.priceText
-        let buyText = state.buyText
-        let notBuyText = state.notBuyText
-        let currentImageData = state.currentImageData
-        let ifImageURL = state.ifImageURL
-        let isImageProcessing = state.isImageProcessing
-        
+    private static func _checkAll(input: ValidationInput) -> Bool {
         return {
             guard
-                let _ = (itemText.isEmpty ? nil : itemText),
-                let _ = (priceText.isEmpty ? nil : priceText),
-                let _ = (buyText.isEmpty ? nil : buyText),
-                let _ = (notBuyText.isEmpty ? nil : notBuyText),
-                !isImageProcessing,
-                (currentImageData != nil || ifImageURL != nil)
+                let _ = (input.itemText.isEmpty ? nil : input.itemText),
+                let _ = (input.priceText.isEmpty ? nil : input.priceText),
+                let _ = (input.buyText.isEmpty ? nil : input.buyText),
+                let _ = (input.notBuyText.isEmpty ? nil : input.notBuyText),
+                !input.isImageProcessing,
+                (input.currentImageData != nil || input.ifImageURL != nil)
             else {
                 return false
             }
@@ -398,4 +409,15 @@ extension BuyOrNotAddViewFeature {
         }()
     }
     
+}
+
+private struct ValidationInput: Sendable {
+    let itemText: String
+    let priceText: String
+    let buyText: String
+    let notBuyText: String
+    let currentImageData: Data?
+    let ifImageURL: URL?
+    let isImageProcessing: Bool
+    let currentOkButtonState: Bool
 }

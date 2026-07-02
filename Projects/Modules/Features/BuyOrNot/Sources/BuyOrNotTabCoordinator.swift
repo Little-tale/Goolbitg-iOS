@@ -15,7 +15,7 @@ public struct BuyOrNotTabCoordinator {
 
     @ObservableState
     public struct State: Equatable {
-        public static let initialState = State()
+        public static var initialState: State { State() }
 
         var home = BuyOrNotTabViewFeature.State()
     }

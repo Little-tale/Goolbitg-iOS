@@ -67,7 +67,8 @@ extension ExpressExpenditureDateViewFeature {
                 }
                 let currentDate = state.selectedDate
                 let format = dateManager.format(format: .timeHHmmss, date: currentDate)
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager, currentWeek, format] send in
                     try await networkManager.requestNotDtoNetwork(
                         router: UserRouter.userPatternRegist(requestModel: UserPatternRequestModel(
                             primeUseDay: currentWeek.format,

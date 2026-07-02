@@ -14,8 +14,7 @@ public struct HomeTabCoordinator {
     public init() {}
     @ObservableState
     public struct State: Equatable {
-        
-        public static let initialState = State()
+        public static var initialState: State { State() }
 
         var home = GBHomeTabViewFeature.State()
         var pushList: PushListViewFeature.State?
@@ -37,6 +36,10 @@ public struct HomeTabCoordinator {
         Scope(state: \.home, action: \.home) {
             GBHomeTabViewFeature()
         }
+        EmptyReducer()
+            .ifLet(\.pushList, action: \.pushList) {
+                PushListViewFeature()
+            }
         core
     }
 }
@@ -59,9 +62,6 @@ extension HomeTabCoordinator {
                 break
             }
             return .none
-        }
-        .ifLet(\.pushList, action: \.pushList) {
-            PushListViewFeature()
         }
     }
 }

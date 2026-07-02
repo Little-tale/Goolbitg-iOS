@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct BuyOrNotVoteRequestDTO: Encodable {
+public struct BuyOrNotVoteRequestDTO: Encodable, Sendable {
     public var vote: BuyOrNotVote
     
     public init(vote: BuyOrNotVote) {
@@ -15,7 +15,7 @@ public struct BuyOrNotVoteRequestDTO: Encodable {
     }
 }
 
-public enum BuyOrNotVote: String, Encodable {
+public enum BuyOrNotVote: String, Encodable, Sendable {
     case good = "GOOD"
     case bad = "BAD"
 }

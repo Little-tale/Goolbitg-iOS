@@ -14,7 +14,7 @@ public protocol MyPageWeeklyGraphProtocol {
     var barStyle: GraphBarStyle { get }
 }
 
-public enum GraphBarStyle: Equatable, Hashable {
+public enum GraphBarStyle: Equatable, Hashable, Sendable {
     case grey
     case mainColor
     case dotStyleForRecommend

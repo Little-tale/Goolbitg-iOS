@@ -76,8 +76,10 @@ public final class UserMapper: Sendable {
     /// - Returns: MyPage Entity
     public func myPageUserMapping(model: UserInfoDTO) -> UserMyPageEntity {
         
-        var nextGold = (model.spendingType.goal ?? 0).toString
+        let goal = model.spendingType.goal ?? 0
+        var nextGold = goal.toString
         nextGold = GBNumberForMatter.shared.changeForCommaNumber(nextGold)
+        let nextGoolBPercent = goal > 0 ? model.achievementGuage / Double(goal) : 0
         
         return UserMyPageEntity(
             nickname: model.nickname,
@@ -87,7 +89,7 @@ public final class UserMapper: Sendable {
             shareImageUrl: URL(string: model.spendingType.onboardingResultUrl ?? ""),
             writeCount: String(model.postCount),
             nextGoolbTitle: "다음 굴비까지 " + nextGold + "원 남았어요",
-            nextGoolBPercent: model.achievementGuage / Double(model.spendingType.goal ?? 0),
+            nextGoolBPercent: nextGoolBPercent,
             userID: model.id,
             userTypeImageUrl: model.spendingType.profileUrl
         )

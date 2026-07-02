@@ -66,17 +66,47 @@ public struct AuthTokenStorage {
         }
     }
     
-    @AuthTokenStorageWrapper(key: AuthTokenStorageKey.accessToken.key)
-    public static var accessToken: String?
+    public static var accessToken: String? {
+        get { value(for: .accessToken) }
+        set { setValue(newValue, for: .accessToken) }
+    }
 
-    @AuthTokenStorageWrapper(key: AuthTokenStorageKey.refreshToken.key)
-    public static var refreshToken: String?
+    public static var refreshToken: String? {
+        get { value(for: .refreshToken) }
+        set { setValue(newValue, for: .refreshToken) }
+    }
 
     public init() {}
 
     public static func clearAll() {
-        AuthTokenStorage.$accessToken.remove()
-        AuthTokenStorage.$refreshToken.remove()
+        remove(.accessToken)
+        remove(.refreshToken)
     }
 }
 
+private extension AuthTokenStorage {
+    private static func value(for key: AuthTokenStorageKey) -> String? {
+        do {
+            return try KeyChainManager.readString(for: key.key)
+        } catch {
+            print("Error = \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private static func setValue(_ newValue: String?, for key: AuthTokenStorageKey) {
+        do {
+            if let newValue {
+                try KeyChainManager.save(value: newValue, for: key.key)
+            } else {
+                try KeyChainManager.delete(for: key.key)
+            }
+        } catch {
+            print("Error = \(error.localizedDescription)")
+        }
+    }
+
+    private static func remove(_ key: AuthTokenStorageKey) {
+        try? KeyChainManager.delete(for: key.key)
+    }
+}

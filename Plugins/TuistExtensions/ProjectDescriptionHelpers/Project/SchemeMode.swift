@@ -54,58 +54,58 @@ extension Path {
 
 extension Settings {
     
-    public static var appSettings: Self {
-        return .settings(
-            base: [
-                "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
-            ],
-            configurations: [
-                .debug,
-                .release,
-                .dev,
-                .stage,
-                .live
-            ]
-        )
-    }
+//    public static var appSettings: Self {
+//        return .settings(
+//            base: [
+//                "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
+//            ],
+//            configurations: [
+//                .debug,
+//                .release,
+//                .dev,
+//                .stage,
+//                .live
+//            ]
+//        )
+//    }
     
-    public static func swift6Settings(disPlayName: String? = nil) -> Self {
-        var base: ProjectDescription.SettingsDictionary = [
-            "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
-            "SWIFT_VERSION": "6.0" // DemoApp 실행시에는 Swift5 로 변경후 실행 -> TCA 버그 발생
-        ]
-        if let disPlayName {
-            base["DISPLAY_NAME"] = .string(disPlayName)
-        }
-        return .settings(
-            base: base,
-            configurations: [
-                .debug,
-                .release,
-                .dev,
-                .stage,
-                .live
-            ]
-        )
-    }
+//    public static func swift6Settings(disPlayName: String? = nil) -> Self {
+//        var base: ProjectDescription.SettingsDictionary = [
+//            "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
+//            "SWIFT_VERSION": "6.0" // DemoApp 실행시에는 Swift5 로 변경후 실행 -> TCA 버그 발생
+//        ]
+//        if let disPlayName {
+//            base["DISPLAY_NAME"] = .string(disPlayName)
+//        }
+//        return .settings(
+//            base: base,
+//            configurations: [
+//                .debug,
+//                .release,
+//                .dev,
+//                .stage,
+//                .live
+//            ]
+//        )
+//    }
     
-    @available(*, deprecated, renamed: "swift6Settings(disPlayName:)", message: "use swift6Settings(disPlayName:)")
-    public static func demoAppSetting(name: String) -> Self {
-        return .settings(
-            base: [
-                "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
-                "DISPLAY_NAME" : "\(name)",
-            ],
-            configurations: [
-                .debug,
-                .release,
-                .dev,
-                .stage,
-                .live
-            ]
-
-        )
-    }
+//    @available(*, deprecated, renamed: "swift6Settings(disPlayName:)", message: "use swift6Settings(disPlayName:)")
+//    public static func demoAppSetting(name: String) -> Self {
+//        return .settings(
+//            base: [
+//                "DEBUG_INFORMATION_FORMAT": "dwarf-with-dsym",
+//                "DISPLAY_NAME" : "\(name)",
+//            ],
+//            configurations: [
+//                .debug,
+//                .release,
+//                .dev,
+//                .stage,
+//                .live
+//            ]
+//
+//        )
+//    }
 }
 
 extension Scheme {
@@ -169,4 +169,15 @@ extension Configuration {
     public static let dev: Self = .debug(name: .dev, xcconfig: .xcconfigPath(SchemeMode.dev.schemeName))
     public static let stage: Self = .debug(name: .stage, xcconfig: .xcconfigPath(SchemeMode.stage.schemeName))
     public static let live: Self = .release(name: .live, xcconfig: .xcconfigPath(SchemeMode.live.schemeName))
+}
+
+
+public extension Array where Element == Configuration {
+    static let `default`: [Configuration] = [
+        .debug,
+        .release,
+        .dev,
+        .stage,
+        .live
+    ]
 }

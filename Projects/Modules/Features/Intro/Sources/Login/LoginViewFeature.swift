@@ -21,9 +21,9 @@ public struct LoginViewFeature {
         
     }
     
-    public enum Action {
-        case getASAuthorization(ASAuthorization)
-        case appleLoginError(Error)
+    public enum Action: Sendable {
+        case getASAuthorization(authToken: String?, idToken: String?)
+        case appleLoginError(String)
         
         case kakaoLoginStart
         
@@ -34,7 +34,7 @@ public struct LoginViewFeature {
         
         case delegate(Delegate)
         
-        public enum Delegate {
+        public enum Delegate: Sendable {
             case loginSuccess
             case moveToOnBoarding(RegisterStatusCase)
         }
@@ -51,12 +51,9 @@ public struct LoginViewFeature {
         Reduce { state, action in
             switch action {
             
-            case .getASAuthorization(let appleAuth):
-                // apple 1차 토큰
-                let auth = handleAuthorization(appleAuth)
-                
-                guard let authToken = auth.auth,
-                      let idToken = auth.id
+            case let .getASAuthorization(authToken, idToken):
+                guard let authToken,
+                      let idToken
                 else {
                     // MARK: ERROR 처리 해야함.
                     return .none
@@ -64,13 +61,12 @@ public struct LoginViewFeature {
                 LoadingEnvironment.shared.loading(true)
                 return .send(.sendToServerIdToken(type: "APPLE", idToken: idToken, authToken: authToken))
 
-            case .appleLoginError(let error):
-                let error = error
-                
-                Logger.debug(error)
+            case .appleLoginError(let message):
+                Logger.debug(message)
             case .kakaoLoginStart:
                 LoadingEnvironment.shared.loading(true)
-                return .run { send in
+                let kakaoLoginLogic = Self.kakaoLoginLogic
+                return .run { [kakaoLoginLogic] send in
                     guard let idToken = try await kakaoLoginLogic() else {
                         return
                     }
@@ -98,7 +94,8 @@ public struct LoginViewFeature {
                     .throttle(id: CancelID.kakao, for: 5, scheduler: DispatchQueue.main.eraseToAnyScheduler(), latest: false)
                 
             case .sendToServerIdToken(let type, let idToken, let auth):
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager, type, idToken, auth] send in
                     do {
                         Logger.info(" ^^^^^^^^^^^ \(idToken)")
                         let result = try await networkManager.requestNotDtoNetwork(router: AuthRouter.register(AuthRegisterRequestModel(
@@ -126,7 +123,9 @@ public struct LoginViewFeature {
                 }
                 
             case .sendToLoginServerIdToken(let type, let idToken):
-                return .run { send in
+                let networkManager = self.networkManager
+                let saveToken = Self.saveToken
+                return .run { [networkManager, saveToken, type, idToken] send in
                     let request = try await networkManager.requestNetwork(dto: LoginAccessDTO.self, router: AuthRouter
                         .login(
                         AuthLoginRequestModel(
@@ -134,7 +133,7 @@ public struct LoginViewFeature {
                             idToken: idToken )
                         )
                     )
-                    saveToken(access: request.accessToken, refresh: request.refreshToken)
+                    saveToken(request.accessToken, request.refreshToken)
                     
                     FireBaseManager.logEvent(log: FireBaseLogModel(
                         eventName: "APPLE_Login",
@@ -200,7 +199,7 @@ public struct LoginViewFeature {
 extension LoginViewFeature {
     /// 회원 가입시 받고
     /// 회원 탈퇴시 받고
-    private func handleAuthorization(
+    static func handleAuthorization(
         _ authorization: ASAuthorization
     ) -> (auth: String?, id: String?) {
         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
@@ -244,7 +243,7 @@ extension LoginViewFeature {
     }
     
     
-    private func kakaoLoginLogic() async throws(KakaoLoginErrorCase) -> String? {
+    private static func kakaoLoginLogic() async throws(KakaoLoginErrorCase) -> String? {
         
         let result = await KakaoLoginManager.requestKakao()
         switch result {
@@ -257,7 +256,7 @@ extension LoginViewFeature {
         }
     }
     
-    private func saveToken(access: String, refresh: String) {
+    private static func saveToken(access: String, refresh: String) {
         AuthTokenStorage.accessToken = access
         AuthTokenStorage.refreshToken = refresh
 //        UserDefaultsManager.accessToken = access

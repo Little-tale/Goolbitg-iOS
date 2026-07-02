@@ -53,9 +53,13 @@ extension AuthRequestPageFeature {
             switch action {
                 
             case .startButtonTapped:
-                return .run { send in
+                let pushManager = self.pushManager
+                let cameraManager = self.cameraManager
+                let albumAuthManager = self.albumAuthManager
+                let networkManager = self.networkManager
+                return .run { [pushManager, cameraManager, albumAuthManager, networkManager] send in
                     // 허용 가정하고 푸시 테스트
-                   let result = try await pushManager.requestNotificationPermission()
+                    _ = try await pushManager.requestNotificationPermission()
                     
                     await cameraManager.requestAuth()
                     

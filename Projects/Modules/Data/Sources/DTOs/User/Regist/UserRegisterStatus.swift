@@ -8,12 +8,12 @@
 import Foundation
 import Domain
 
-public struct UserRegisterStatus: DTO {
+public struct UserRegisterStatus: DTO, Sendable {
     public let status: RegisterStatusCase
     public let requiredInfoCompleted: Bool
 }
 
-public enum RegisterStatusCase: Int, DTO {
+public enum RegisterStatusCase: Int, DTO, Sendable {
     /// 약관
     case onBoarding1 = 0
     /// 사용자 개인정보 등록

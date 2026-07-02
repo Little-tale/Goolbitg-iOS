@@ -82,8 +82,11 @@ extension RevokeFeature {
                 if caseOf == .other {
                     text = state.content
                 }
+
+                let appleLoginManager = self.appleLoginManager
+                let networkManager = self.networkManager
                 
-                return .run { [text] send in
+                return .run { [text, appleLoginManager, networkManager] send in
                     Logger.debug("🍎 [Revoke] Apple revoke start, reason: \(text)")
                     let result = try await appleLoginManager.getASAuthorization()
                     Logger.debug("🍎 [Revoke] Apple authorization completed")
@@ -120,8 +123,10 @@ extension RevokeFeature {
                 if caseOf == .other {
                     text = state.content
                 }
+
+                let networkManager = self.networkManager
                 
-                return .run { [text] send in
+                return .run { [text, networkManager] send in
                     let requestModel = RevokeRequestDTO(
                         reason: text,
                         authorizationCode: nil

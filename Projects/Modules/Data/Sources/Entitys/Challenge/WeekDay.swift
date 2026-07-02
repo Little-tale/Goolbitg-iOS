@@ -9,7 +9,7 @@ import Foundation
 import Domain
 import Utils
 
-public struct WeekDay: Identifiable, Entity {
+public struct WeekDay: Identifiable, Entity, Sendable {
     public var id = UUID()
     public var date: Date
     public var active: Bool = true
@@ -31,7 +31,7 @@ public struct WeekDay: Identifiable, Entity {
     }
 }
 
-public struct OneWeekDay: Entity {
+public struct OneWeekDay: Entity, Sendable {
     public var date: Date
     public var weekState: Bool
     

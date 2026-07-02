@@ -44,7 +44,7 @@ public struct GroupChallengeCreateViewFeature {
         }
     }
     
-    public enum FeatureMode {
+    public enum FeatureMode: Sendable {
         case create
         case modify
         
@@ -187,7 +187,8 @@ extension GroupChallengeCreateViewFeature {
                 guard let requestModel = makeRequestBody(state: state) else {
                     return .none
                 }
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager, requestModel] send in
                     let _ = try await networkManager.requestNetworkWithRefresh(
                         dto: GroupChallengeDTO.self,
                         router: ChallengeRouter.groupChallengeCreate(requestDTO: requestModel)
@@ -274,7 +275,9 @@ extension GroupChallengeCreateViewFeature {
         Reduce { state, action in
             switch action {
             case let .featureAction(.requestRoomInfo(roomId)):
-                return .run { send in
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
+                return .run { [networkManager, challengeMapper, roomId] send in
                     let result = try await networkManager.requestNetworkWithRefresh(
                         dto: GroupChallengeDetailDTO.self,
                         router: ChallengeRouter.groupChallengeDetail(groupID: roomId)
@@ -305,8 +308,9 @@ extension GroupChallengeCreateViewFeature {
                     return .none
                 }
                 let id = state.ifModifyRoomID
+                let networkManager = self.networkManager
                 
-                return .run { send in
+                return .run { [networkManager, id, model] send in
                     let _ = try await networkManager.requestNetworkWithRefresh(
                         dto: GroupChallengeDTO.self,
                         router: ChallengeRouter.groupChallengeModify(groupID: id, requestDTO: model)

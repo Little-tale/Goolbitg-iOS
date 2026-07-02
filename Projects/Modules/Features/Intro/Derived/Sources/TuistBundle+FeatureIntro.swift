@@ -12,12 +12,12 @@ import Foundation
 private class BundleFinder {}
 extension Foundation.Bundle {
 /// Since FeatureIntro is a dynamic framework, the bundle for classes within this module can be used directly.
-    static let module = Bundle(for: BundleFinder.self)
+    nonisolated static let module = Bundle(for: BundleFinder.self)
 }
 // MARK: - Objective-C Bundle Accessor
 @objc
-public class FeatureIntroResources: NSObject {
-@objc public class var bundle: Bundle {
+public final class FeatureIntroResources: NSObject {
+@objc public nonisolated class var bundle: Bundle {
     return .module
 }
 }

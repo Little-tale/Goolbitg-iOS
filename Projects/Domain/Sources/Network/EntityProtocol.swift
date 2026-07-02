@@ -7,4 +7,4 @@
 
 import Foundation
 
-public protocol Entity: Equatable, Hashable {}
+public protocol Entity: Equatable, Hashable, Sendable {}

@@ -87,7 +87,7 @@ public actor SocketManager {
         static let reconnectDelays: [Duration] = [.seconds(1), .seconds(2), .seconds(4), .seconds(8), .seconds(16)]
     }
 
-    public struct Configuration {
+    public struct Configuration: Sendable {
         public let url: URL
 
         public init(url: URL) {
@@ -95,25 +95,27 @@ public actor SocketManager {
         }
     }
 
-    public struct Event {
+    public struct Event: Sendable {
         public let name: String
-        public let items: [Any]
+        public let headers: [String: String]
+        public let body: String
 
-        public init(name: String, items: [Any]) {
+        public init(name: String, headers: [String: String], body: String) {
             self.name = name
-            self.items = items
+            self.headers = headers
+            self.body = body
         }
     }
 
-    public enum LifecycleEvent {
-        case connected(items: [Any])
-        case disconnected(reason: String, items: [Any])
-        case reconnect(items: [Any])
-        case reconnectAttempt(items: [Any])
-        case statusChanged(status: String, items: [Any])
+    public enum LifecycleEvent: Sendable {
+        case connected(headers: [String: String])
+        case disconnected(reason: String)
+        case reconnect(attempt: Int)
+        case reconnectAttempt(attempt: Int, reason: String)
+        case statusChanged(status: String)
     }
 
-    public enum ManagerError: Error {
+    public enum ManagerError: Error, Sendable {
         case notConfigured
         case socketUnavailable
         case invalidEmitPayload(event: String)
@@ -173,7 +175,7 @@ extension SocketManager {
         pingTask = nil
         reconnectTask?.cancel()
         reconnectTask = nil
-        publishLifecycle(.statusChanged(status: "configured", items: []))
+        publishLifecycle(.statusChanged(status: "configured"))
     }
 
     public func setActiveLease(_ lease: UUID) {
@@ -208,7 +210,7 @@ extension SocketManager {
         self.session = session
         self.socketTask = task
         self.statusValue = "connecting"
-        publishLifecycle(.statusChanged(status: "connecting", items: []))
+        publishLifecycle(.statusChanged(status: "connecting"))
 
         task.resume()
 
@@ -254,12 +256,8 @@ extension SocketManager {
         await disconnect()
     }
 
-    public func emit(event: String, items: [Any] = []) async -> Bool {
-        guard let payload = items.first else {
-            publishError(.invalidEmitPayload(event: event))
-            return false
-        }
-        guard let body = STOMPFrameCodec.jsonString(from: payload) else {
+    public func emit(event: String, body: String) async -> Bool {
+        guard !body.isEmpty else {
             publishError(.invalidEmitPayload(event: event))
             return false
         }
@@ -282,12 +280,12 @@ extension SocketManager {
 
     public func emitWithAck(
         event: String,
-        items: [Any] = [],
+        body: String,
         timeout: Double = 0,
-        callback: @escaping ([Any]) -> Void
+        callback: @escaping @Sendable (String?) -> Void
     ) async {
-        _ = await emit(event: event, items: items)
-        let result: [Any] = timeout >= 0 ? [] : []
+        _ = await emit(event: event, body: body)
+        let result: String? = timeout >= 0 ? nil : nil
         callback(result)
     }
 
@@ -453,19 +451,17 @@ private extension SocketManager {
                     await self?.pingLoop(generation: generation)
                 }
                 if wasReconnecting {
-                    publishLifecycle(.reconnect(items: [completedReconnectAttempt]))
+                    publishLifecycle(.reconnect(attempt: completedReconnectAttempt))
                 }
-                publishLifecycle(.connected(items: [frame.headers]))
-                publishLifecycle(.statusChanged(status: "connected", items: []))
+                publishLifecycle(.connected(headers: frame.headers))
+                publishLifecycle(.statusChanged(status: "connected"))
                 for destination in desiredSubscriptions.sorted() {
                     await activateSubscriptionIfNeeded(event: destination)
                 }
 
             case "MESSAGE":
                 let destination = frame.headers["destination"] ?? ""
-                let payload = STOMPFrameCodec.jsonObject(from: frame.body)
-                let items = payload.map { [$0] } ?? [frame.body]
-                let event = Event(name: destination, items: items)
+                let event = Event(name: destination, headers: frame.headers, body: frame.body)
                 publishEvent(event)
                 yieldToMatchingListeners(event)
 
@@ -558,8 +554,8 @@ private extension SocketManager {
             cancelReconnectTask: false,
             clearActiveLease: false
         )
-        publishLifecycle(.reconnectAttempt(items: [attempt, reason]))
-        publishLifecycle(.statusChanged(status: "reconnecting", items: [attempt]))
+        publishLifecycle(.reconnectAttempt(attempt: attempt, reason: reason))
+        publishLifecycle(.statusChanged(status: "reconnecting"))
 
         reconnectTask = Task { [weak self] in
             try? await Task.sleep(for: delay)
@@ -613,9 +609,9 @@ private extension SocketManager {
 
         if publishDisconnect, let reason, wasConnected {
             Logger.debug("❌ SocketManager disconnected: \(reason)")
-            publishLifecycle(.disconnected(reason: reason, items: []))
+            publishLifecycle(.disconnected(reason: reason))
         }
-        publishLifecycle(.statusChanged(status: "notConnected", items: []))
+        publishLifecycle(.statusChanged(status: "notConnected"))
     }
 
     func sendPing() async throws {

@@ -8,7 +8,7 @@
 import Foundation
 import Utils
 
-public enum AgreeListCase: Equatable, CaseIterable, Hashable {
+public enum AgreeListCase: Equatable, CaseIterable, Hashable, Sendable {
     case fourTeen
     case serviceAgree
     case privateAgree

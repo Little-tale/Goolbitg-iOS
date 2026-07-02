@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UserAgreeMentRequestModel: Encodable {
+public struct UserAgreeMentRequestModel: Encodable, Sendable {
     public let agreement1: Bool
     public let agreement2: Bool
     public let agreement3: Bool

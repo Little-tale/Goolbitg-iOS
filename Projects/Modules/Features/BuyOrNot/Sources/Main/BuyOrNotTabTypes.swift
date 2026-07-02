@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum BuyOrNotTabInMode: Equatable, Hashable {
+public enum BuyOrNotTabInMode: Equatable, Hashable, Sendable {
     case buyOrNot
     case records
 
@@ -22,7 +22,7 @@ public enum BuyOrNotTabInMode: Equatable, Hashable {
 }
 
 /// 기록뷰 스위치 타입
-public enum RecordType: Equatable, Hashable, CaseIterable {
+public enum RecordType: Equatable, Hashable, CaseIterable, Sendable {
     case writePost
     case joinChat
 
@@ -36,7 +36,7 @@ public enum RecordType: Equatable, Hashable, CaseIterable {
     }
 }
 
-public enum ReportCase: Equatable, CaseIterable {
+public enum ReportCase: Equatable, CaseIterable, Sendable {
     case adult
     case fight
     case wrong

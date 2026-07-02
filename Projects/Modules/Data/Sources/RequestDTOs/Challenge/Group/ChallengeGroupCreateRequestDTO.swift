@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ChallengeGroupCreateRequestDTO: Encodable {
+public struct ChallengeGroupCreateRequestDTO: Encodable, Sendable {
     public let title: String
     public let hashtags: [String]
     public let reward: Int

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UserInfoRegistReqeustModel: Encodable {
+public struct UserInfoRegistReqeustModel: Encodable, Sendable {
     public let nickname: String
     public let birthday: String?
     public let gender: String?

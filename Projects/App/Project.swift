@@ -1,38 +1,4 @@
-//
-//  Project.swift
-//  Config
-//
-//  Created by Jae hyung Kim on 5/21/25.
-//
-
-import TuistExtensions
 import ProjectDescription
+import ProjectDescriptionHelpers
 
-let project = Project.create(
-    config: ProjectConfig(
-        name: "App",
-        product: .app,
-        deploymentTargets: AppConfig.deployTarget,
-        schemes: [], // SchemeMode.getSchemes(targetName: "App", path: "App"),
-        scripts: [
-            .fireBase,
-            .fireBaseCrashlyticsRun
-        ],
-        dependencies: Module.features.map(\.projectTarget) + [
-            Module.utils.projectTarget,
-            Module.Data.projectTarget,
-            .tca,
-            .popupView
-        ],
-        resources: [
-            .glob(
-                pattern: .relativeToRoot("AppSettingFiles/AppResources/**"),
-                excluding: [],
-                tags: [],
-                inclusionCondition: nil
-            )
-        ],
-        sources: "Sources/**"
-    )
-)
-// SchemeMode.getSchemes(targetName: "App", path: AppConfig.appPath)
+let project = Project.module(moduleType: .app)

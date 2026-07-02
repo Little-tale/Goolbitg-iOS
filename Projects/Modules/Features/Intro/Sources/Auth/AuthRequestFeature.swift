@@ -145,8 +145,9 @@ public struct AuthRequestFeature {
                 /// 통신해야함 중복 검사
             case .viewEvent(.duplicatedButtonTapped):
                 let nickName = state.nickName
+                let networkManager = self.networkManager
                 
-                return .run { send in
+                return .run { [nickName, networkManager] send in
                     let result = try await networkManager.requestNetworkWithRefresh(
                         dto: NickNameCheckDTO.self,
                         router: UserRouter.nickNameCheck(
@@ -188,8 +189,9 @@ public struct AuthRequestFeature {
                 checkedAgreeButtonState(state: &state)
                 
             case let .viewEvent(.agreeListRightButtonTapped(caseOf)):
+                let moveURLManager = self.moveURLManager
                 
-                return .run { _ in
+                return .run { [caseOf, moveURLManager] _ in
                     switch caseOf {
                     case .fourTeen:
                         break
@@ -274,8 +276,10 @@ extension AuthRequestFeature {
             birthday: birthDayDateOptional ? dateFormatter.format(format: .infoBirthDay, date: state.birthDayDate) : nil,
             gender: state.currentGender?.formattedString
         )
+
+        let networkManager = self.networkManager
         
-        return .run { send in
+        return .run { [networkManager, requestModel, userRequestModel, nickName] send in
             /// 약관동의
             try await networkManager.requestNotDtoNetwork(
                 router: UserRouter.agreement(requestModel: requestModel),

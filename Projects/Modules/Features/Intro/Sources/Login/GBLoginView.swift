@@ -58,9 +58,10 @@ extension GBLoginView {
                     } onCompletion: { result in
                         switch result {
                         case .success(let authorization):
-                            store.send(.getASAuthorization(authorization))
+                            let auth = LoginViewFeature.handleAuthorization(authorization)
+                            store.send(.getASAuthorization(authToken: auth.auth, idToken: auth.id))
                         case .failure(let fail):
-                            store.send(.appleLoginError(fail))
+                            store.send(.appleLoginError(fail.localizedDescription))
                         }
                     }
                     .blendMode(.overlay)
@@ -147,4 +148,3 @@ extension GBLoginView {
     }))
 }
 #endif
-

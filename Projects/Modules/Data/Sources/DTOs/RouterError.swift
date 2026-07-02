@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum RouterError: Error {
+public enum RouterError: Error, Sendable {
     case urlFail(url: String = "")
     case decodingFail
     case encodingFail

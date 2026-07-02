@@ -7,7 +7,7 @@
 
 import Foundation
 
-public final actor UserDefaultsManager {
+public enum UserDefaultsManager {
     
     public enum Key: String {
         case deviceToken
@@ -38,46 +38,83 @@ public final actor UserDefaultsManager {
         }
     }
     
-    @UserDefaultsWrapper(key: Key.deviceToken.value, placeValue: "")
-    public static var deviceToken: String
+    public static var deviceToken: String {
+        get { value(for: .deviceToken, placeValue: "") }
+        set { setValue(newValue, for: .deviceToken, placeValue: "") }
+    }
     
     @available(*, deprecated, renamed: "KeyChainManager", message: "use KeyChainManager")
-    @UserDefaultsWrapper(key: Key.accessToken.value, placeValue: "")
-    public static var accessToken: String
+    public static var accessToken: String {
+        get { value(for: .accessToken, placeValue: "") }
+        set { setValue(newValue, for: .accessToken, placeValue: "") }
+    }
     
     @available(*, deprecated, renamed: "KeyChainManager", message: "use KeyChainManager")
-    @UserDefaultsWrapper(key: Key.refreshToken.value, placeValue: "")
-    public static var refreshToken: String
+    public static var refreshToken: String {
+        get { value(for: .refreshToken, placeValue: "") }
+        set { setValue(newValue, for: .refreshToken, placeValue: "") }
+    }
     
-    @UserDefaultsWrapper(key: Key.firstDevice.value, placeValue: true)
-    public static var firstDevice: Bool
+    public static var firstDevice: Bool {
+        get { value(for: .firstDevice, placeValue: true) }
+        set { setValue(newValue, for: .firstDevice, placeValue: true) }
+    }
     
-    @UserDefaultsWrapper(key: Key.userNickname.value, placeValue: "")
-    public static var userNickname: String
+    public static var userNickname: String {
+        get { value(for: .userNickname, placeValue: "") }
+        set { setValue(newValue, for: .userNickname, placeValue: "") }
+    }
     
-    @UserDefaultsWrapper(key: Key.userID.value, placeValue: "")
-    public static var userID: String
+    public static var userID: String {
+        get { value(for: .userID, placeValue: "") }
+        set { setValue(newValue, for: .userID, placeValue: "") }
+    }
     
-    @UserDefaultsWrapper(key: Key.userHabitType.value, placeValue: nil)
-    public static var userHabitType: Int?
+    public static var userHabitType: Int? {
+        get { value(for: .userHabitType, placeValue: nil) }
+        set { setValue(newValue, for: .userHabitType, placeValue: nil) }
+    }
     
-    @UserDefaultsWrapper(key: Key.appleLoginAccess.value, placeValue: nil)
-    public static var appleAccessToken: String?
+    public static var appleAccessToken: String? {
+        get { value(for: .appleLoginAccess, placeValue: nil) }
+        set { setValue(newValue, for: .appleLoginAccess, placeValue: nil) }
+    }
     
-    @UserDefaultsWrapper(key: Key.appleLoginRefresh.value, placeValue: nil)
-    public static var appleRefreshToken: String?
+    public static var appleRefreshToken: String? {
+        get { value(for: .appleLoginRefresh, placeValue: nil) }
+        set { setValue(newValue, for: .appleLoginRefresh, placeValue: nil) }
+    }
     
-    @UserDefaultsWrapper(key: Key.ifAppleLoginUser.value, placeValue: false)
-    public static var ifAppleLoginUser: Bool
+    public static var ifAppleLoginUser: Bool {
+        get { value(for: .ifAppleLoginUser, placeValue: false) }
+        set { setValue(newValue, for: .ifAppleLoginUser, placeValue: false) }
+    }
     
-    @UserDefaultsWrapper(key: Key.fcmRegistrationToken.value, placeValue: nil)
-    public static var fcmRegistrationToken: String?
+    public static var fcmRegistrationToken: String? {
+        get { value(for: .fcmRegistrationToken, placeValue: nil) }
+        set { setValue(newValue, for: .fcmRegistrationToken, placeValue: nil) }
+    }
     
-    @UserDefaultsWrapper(key: Key.fcmReciveCount.value, placeValue: 0)
-    public static var fcmReciveCount: Int
+    public static var fcmReciveCount: Int {
+        get { value(for: .fcmReciveCount, placeValue: 0) }
+        set { setValue(newValue, for: .fcmReciveCount, placeValue: 0) }
+    }
     
-    @UserDefaultsWrapper(key: Key.rootLoginUser.value, placeValue: false)
-    public static var rootLoginUser: Bool
+    public static var rootLoginUser: Bool {
+        get { value(for: .rootLoginUser, placeValue: false) }
+        set { setValue(newValue, for: .rootLoginUser, placeValue: false) }
+    }
+}
+
+private extension UserDefaultsManager {
+    static func value<T: Codable>(for key: Key, placeValue: T) -> T {
+        UserDefaultsWrapper(key: key.value, placeValue: placeValue).wrappedValue
+    }
+
+    static func setValue<T: Codable>(_ newValue: T, for key: Key, placeValue: T) {
+        var wrapper = UserDefaultsWrapper(key: key.value, placeValue: placeValue)
+        wrapper.wrappedValue = newValue
+    }
 }
 
 extension UserDefaultsManager {

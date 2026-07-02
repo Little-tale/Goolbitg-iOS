@@ -59,7 +59,7 @@ public struct ChallengeTabFeature: GBReducer {
         var groupChallengePagingObj = GroupChallengePagingObj(participating: true)
     }
     
-    public enum Action {
+    public enum Action: Sendable {
         case viewCycle(ViewCycle)
         case viewEvent(ViewEvent)
         case featureEvent(FeatureEvent)
@@ -75,7 +75,7 @@ public struct ChallengeTabFeature: GBReducer {
         @ReducerCaseIgnored
         case groupChallengePageIndex(Int)
         
-        public enum Delegate {
+        public enum Delegate: Sendable {
             case moveToChallengeAdd
             case moveToDetail(itemID: String)
             case hiddenTabBar
@@ -89,16 +89,16 @@ public struct ChallengeTabFeature: GBReducer {
         case datePickerMonth(Date)
     }
     
-    public enum ViewCycle {
+    public enum ViewCycle: Sendable {
         case onAppear
         case groupViewCycle(GroupChallengeViewCycle)
         
-        public enum GroupChallengeViewCycle {
+        public enum GroupChallengeViewCycle: Sendable {
             case onAppear
         }
     }
     
-    public enum ViewEvent {
+    public enum ViewEvent: Sendable {
         case showChallengeAdd
         case checkPagingForWeekData
         case selectedMonthDate(Date)
@@ -111,7 +111,7 @@ public struct ChallengeTabFeature: GBReducer {
         case groupChallengeViewEvent(GroupChallengeViewEvent)
         
         
-        public enum GroupChallengeViewEvent {
+        public enum GroupChallengeViewEvent: Sendable {
             case selectedParticipatingModel(entity: ParticipatingGroupChallengeListEntity)
             case onlyMakeMeButtonTapped
             case showGroupChallengeAddView
@@ -121,7 +121,7 @@ public struct ChallengeTabFeature: GBReducer {
         }
     }
     
-    public enum FeatureEvent {
+    public enum FeatureEvent: Sendable {
 //        case requestCurrentMonth(Date)
         case requestFirstSettingWeekDatas(Date)
         case requestResettingWeekDatas(Date)
@@ -140,7 +140,7 @@ public struct ChallengeTabFeature: GBReducer {
         case resultToChallengeList(dats: [ChallengeEntity])
     }
     
-    public enum GroupChallengeFeatureEvent {
+    public enum GroupChallengeFeatureEvent: Sendable {
         
         case requestGroupChallengeList(obj: GroupChallengePagingObj)
         
@@ -152,12 +152,12 @@ public struct ChallengeTabFeature: GBReducer {
         case updateGroupListPageNationLoad(bool: Bool)
     }
     
-    public enum ParentEvent {
+    public enum ParentEvent: Sendable {
         case reloadData
         case reloadGroupData
     }
     
-    enum CancelID: Hashable {
+    enum CancelID: Hashable, Sendable {
         case switchToggle
         case checkWeekDate
         case onlyMakeMeButtonTapped
@@ -190,7 +190,7 @@ extension ChallengeTabFeature {
                     state.onAppearTrigger = true
                     let page = state.pagingObj
                     state.listLoad = true
-                    return .run { send in
+                    return .run { [page] send in
                         await send(.featureEvent(.requestFirstSettingWeekDatas(Date())))
                         await send(.featureEvent(.requestChallengeList(obj: page)))
                     }
@@ -250,8 +250,13 @@ extension ChallengeTabFeature {
             case let .featureEvent(.requestFirstSettingWeekDatas(date)):
                 
                 if !state.weekSlider.isEmpty { return .none }
+                state.weekSlider = fallbackWeekSlider(for: date)
+                state.weekIndex = min(1, max(0, state.weekSlider.count - 1))
+                let dateManager = self.dateManager
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
                 
-                return .run { send in
+                return .run { [dateManager, networkManager, challengeMapper, date] send in
                     var weekSlider: [[WeekDay]] = []
                     
                     let currentWeekEntity = dateManager.fetchWeek(date)
@@ -295,8 +300,13 @@ extension ChallengeTabFeature {
                 state.weekIndex = 1
                 
             case let .featureEvent(.requestResettingWeekDatas(date)):
+                state.weekSlider = fallbackWeekSlider(for: date)
+                state.weekIndex = min(1, max(0, state.weekSlider.count - 1))
+                let dateManager = self.dateManager
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
 
-                return .run { send in
+                return .run { [dateManager, networkManager, challengeMapper, date] send in
                     var weekSlider: [[WeekDay]] = []
                     
                     let currentWeekEntity = dateManager.fetchWeek(date)
@@ -368,8 +378,11 @@ extension ChallengeTabFeature {
                       index == 0 else {
                     return .none
                 }
+                let dateManager = self.dateManager
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
                 
-                return .run { send in
+                return .run { [dateManager, networkManager, challengeMapper, firstDate] send in
                     let prev = dateManager.createPreviousWeek(firstDate)
                     
                     let dateString = dateManager.format(
@@ -413,8 +426,11 @@ extension ChallengeTabFeature {
                       lastDate < today else {
                     return .none
                 }
+                let dateManager = self.dateManager
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
                 
-                return .run { send in
+                return .run { [dateManager, networkManager, challengeMapper, lastDate] send in
                     let nextWeek = dateManager.createNextWeek(lastDate)
                     
                     let dateString = dateManager.format(
@@ -452,8 +468,11 @@ extension ChallengeTabFeature {
                 let selectedSwitchIndex = state.selectedSwitchIndex
                 let toggleCase = state.toggleSwitchCase
                 let isToday = state.isToday
+                let dateManager = self.dateManager
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
                 
-                return .run { send in
+                return .run { [dateManager, networkManager, challengeMapper, obj, selectedSwitchIndex, toggleCase, isToday] send in
                     let dateFormat = dateManager.format(format: .infoBirthDay, date: obj.date)
                     let status = toggleCase[selectedSwitchIndex]
                     
@@ -510,7 +529,7 @@ extension ChallengeTabFeature {
                 state.selectedWeekDay = WeekDay(date: Date())
                 
                 state.listLoad = true
-                return .run { send in
+                return .run { [page] send in
                     await send(.featureEvent(.requestResettingWeekDatas(Date())))
                     await send(.featureEvent(.requestChallengeList(obj: page)))
                 } catch: { error, send in
@@ -523,7 +542,7 @@ extension ChallengeTabFeature {
                 let obj = state.pagingObj
                 
                 state.listLoad = true
-                return .run { send in
+                return .run { [obj] send in
                     await send(.featureEvent(.requestChallengeList(obj: obj)))
                 } catch: { error, send in
                     Logger.error(error)
@@ -541,6 +560,19 @@ extension ChallengeTabFeature {
             return .none
         }
     }
+
+    private func fallbackWeekSlider(for date: Date) -> [[WeekDay]] {
+        let currentWeek = dateManager.fetchWeek(date)
+        var weekSlider: [[WeekDay]] = []
+
+        if let firstDate = currentWeek.first?.date {
+            weekSlider.append(dateManager.createPreviousWeek(firstDate))
+        }
+
+        weekSlider.append(currentWeek)
+
+        return weekSlider.filter { !$0.isEmpty }
+    }
     
 }
 
@@ -555,10 +587,11 @@ extension ChallengeTabFeature {
                 // MARK: GroupViewCycle
             case .viewCycle(.groupViewCycle(.onAppear)):
                 state.groupChallengePagingObj = GroupChallengePagingObj(participating: true)
-                return .run { [state] send in
+                let pagingObj = state.groupChallengePagingObj
+                return .run { [pagingObj] send in
                     await send(.groupChallengeFeatureEvent(.changeLoadState(ifLoad: true)))
                     try await Task.sleep(for: .seconds(1)) // groupListLoad
-                    await send(.groupChallengeFeatureEvent(.requestGroupChallengeList(obj: state.groupChallengePagingObj)))
+                    await send(.groupChallengeFeatureEvent(.requestGroupChallengeList(obj: pagingObj)))
                 }
                 // MARK: GroupView Event
             case .viewEvent(.groupChallengeViewEvent(.onlyMakeMeButtonTapped)):
@@ -583,23 +616,26 @@ extension ChallengeTabFeature {
             
             case let .groupChallengePageIndex(index):
                 if !(state.groupChallengeList.count - 2 < index) { return .none }
+                let pagingObj = state.groupChallengePagingObj
+                let shouldRequest = index > 5
+                    && !state.groupChallengeList.isEmpty
+                    && index >= state.groupChallengeList.count - 2
+                    && pagingObj.pageNum <= (pagingObj.totalPages ?? 0)
                 
-                return .run(priority: .background) { [state] send in
-                    if index > 5, !state.groupChallengeList.isEmpty {
-                        let count = state.groupChallengeList.count
-                        
-                        if index >= count - 2 && state.groupChallengePagingObj.pageNum <= state.groupChallengePagingObj.totalPages ?? 0 {
-                            await send(.groupChallengeFeatureEvent(.updateGroupListPageNationLoad(bool: true)))
-                            await send(.groupChallengeFeatureEvent(.requestGroupChallengeList(obj: state.groupChallengePagingObj)))
-                        }
+                return .run(priority: .background) { [shouldRequest, pagingObj] send in
+                    if shouldRequest {
+                        await send(.groupChallengeFeatureEvent(.updateGroupListPageNationLoad(bool: true)))
+                        await send(.groupChallengeFeatureEvent(.requestGroupChallengeList(obj: pagingObj)))
                     }
                 }
                 .debounce(id: CancelID.scrollToIndexForGroupChallenge, for: 0.2, scheduler: AnySchedulerOf<DispatchQueue>.global(), options: .none)
                 
             // MARK: GroupViewFeatureEvent
             case let .groupChallengeFeatureEvent(.requestGroupChallengeList(obj)):
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
 
-                return .run { send in
+                return .run { [networkManager, challengeMapper, obj] send in
                     let result = try await networkManager
                         .requestNetworkWithRefresh(
                             dto: ChallengeListDTO<GroupChallengeDTO>.self,
@@ -664,9 +700,10 @@ extension ChallengeTabFeature {
             case .groupChallengeFeatureEvent(.toggleToOnlyMakeMeButton):
                 state.groupChallengePagingObj = GroupChallengePagingObj(participating: true)
                 state.groupChallengePagingObj.created = state.groupOnlyMakeMeTrigger
+                let pagingObj = state.groupChallengePagingObj
                 
-                return .run { [state] send in
-                    await send(.groupChallengeFeatureEvent(.requestGroupChallengeList(obj: state.groupChallengePagingObj)))
+                return .run { [pagingObj] send in
+                    await send(.groupChallengeFeatureEvent(.requestGroupChallengeList(obj: pagingObj)))
                 }
                 
             case let .groupChallengeFeatureEvent(.updateGroupListPageNationLoad(bool)):

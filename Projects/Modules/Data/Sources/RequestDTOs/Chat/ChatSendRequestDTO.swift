@@ -1,6 +1,6 @@
 import Foundation
 
-public struct ChatSendRequestDTO: Encodable {
+public struct ChatSendRequestDTO: Encodable, Sendable {
     public let userId: String
     public let username: String
     public let content: String

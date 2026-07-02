@@ -104,13 +104,23 @@ public struct ChattingViewFeature: GBReducer {
     }
 
     private enum CancelID: Hashable {
-        case incoming
-        case errorStream
-        case lifecycleStream
+        case incoming(UUID)
+        case errorStream(UUID)
+        case lifecycleStream(UUID)
     }
 
     @Dependency(\.chatRepository) var chatRepository
     @Dependency(\.textValidManager) var textValidManager
+
+    public static func cancelSocketEffects<ParentAction>(
+        sessionLease: UUID
+    ) -> Effect<ParentAction> {
+        .merge(
+            .cancel(id: CancelID.incoming(sessionLease)),
+            .cancel(id: CancelID.errorStream(sessionLease)),
+            .cancel(id: CancelID.lifecycleStream(sessionLease))
+        )
+    }
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -149,21 +159,21 @@ public struct ChattingViewFeature: GBReducer {
                             }
                         }
                     }
-                    .cancellable(id: CancelID.incoming, cancelInFlight: true),
+                    .cancellable(id: CancelID.incoming(sessionLease), cancelInFlight: true),
                     .run { send in
                         let errors = await repo.observeSocketErrors()
                         for await error in errors {
                             await send(.featureEvent(.socketErrorReceived(error)))
                         }
                     }
-                    .cancellable(id: CancelID.errorStream, cancelInFlight: true),
+                    .cancellable(id: CancelID.errorStream(sessionLease), cancelInFlight: true),
                     .run { send in
                         let lifecycle = await repo.observeSocketLifecycle()
                         for await event in lifecycle {
                             await send(.featureEvent(.socketLifecycleReceived(event)))
                         }
                     }
-                    .cancellable(id: CancelID.lifecycleStream, cancelInFlight: true)
+                    .cancellable(id: CancelID.lifecycleStream(sessionLease), cancelInFlight: true)
                 )
 
             case .viewCycle(.onDisappear):
@@ -171,12 +181,10 @@ public struct ChattingViewFeature: GBReducer {
                 let sessionLease = state.sessionLease
                 Logger.debug("disconnectSocket Request (child safety net)")
                 return .merge(
+                    Self.cancelSocketEffects(sessionLease: sessionLease),
                     .run { _ in
                         await repo.disconnectSocket(lease: sessionLease)
-                    },
-                    .cancel(id: CancelID.incoming),
-                    .cancel(id: CancelID.errorStream),
-                    .cancel(id: CancelID.lifecycleStream)
+                    }
                 )
 
             case .viewCycle(.willEnterForeground):
@@ -185,9 +193,7 @@ public struct ChattingViewFeature: GBReducer {
                 let sessionLease = state.sessionLease
                 let repo = chatRepository
                 return .merge(
-                    .cancel(id: CancelID.incoming),
-                    .cancel(id: CancelID.errorStream),
-                    .cancel(id: CancelID.lifecycleStream),
+                    Self.cancelSocketEffects(sessionLease: sessionLease),
                     .run { send in
                         await repo.disconnectSocket(lease: sessionLease)
 
@@ -207,21 +213,21 @@ public struct ChattingViewFeature: GBReducer {
                             }
                         }
                     }
-                    .cancellable(id: CancelID.incoming, cancelInFlight: true),
+                    .cancellable(id: CancelID.incoming(sessionLease), cancelInFlight: true),
                     .run { send in
                         let errors = await repo.observeSocketErrors()
                         for await error in errors {
                             await send(.featureEvent(.socketErrorReceived(error)))
                         }
                     }
-                    .cancellable(id: CancelID.errorStream, cancelInFlight: true),
+                    .cancellable(id: CancelID.errorStream(sessionLease), cancelInFlight: true),
                     .run { send in
                         let lifecycle = await repo.observeSocketLifecycle()
                         for await event in lifecycle {
                             await send(.featureEvent(.socketLifecycleReceived(event)))
                         }
                     }
-                    .cancellable(id: CancelID.lifecycleStream, cancelInFlight: true)
+                    .cancellable(id: CancelID.lifecycleStream(sessionLease), cancelInFlight: true)
                 )
 
             case let .featureEvent(.cachedLoaded(cached)):
@@ -282,7 +288,7 @@ public struct ChattingViewFeature: GBReducer {
                     state.isReconnecting = false
                     return .none
 
-                case let .statusChanged(status, _):
+                case let .statusChanged(status):
                     state.isSocketConnected = status == "connected"
                     if status == "reconnecting" {
                         state.isReconnecting = true

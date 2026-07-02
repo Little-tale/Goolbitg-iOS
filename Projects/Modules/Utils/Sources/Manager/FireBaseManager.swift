@@ -32,7 +32,7 @@ public final class _FireBaseManager: NSObject, Sendable {
     
     public func reCheckFCMToken(completion: @escaping (String?) -> Void)  {
         Messaging.messaging().token { [weak self] token, error in
-            guard let weakSelf = self else { return }
+            guard let _ = self else { return }
             guard let token else {
                 Logger.error("no TOKEN From FCM")
                 completion(nil)

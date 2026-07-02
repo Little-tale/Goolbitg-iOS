@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol GBReducer {
+public protocol GBReducer: Sendable {
     associatedtype ViewCycle
     associatedtype ViewEvent
 }

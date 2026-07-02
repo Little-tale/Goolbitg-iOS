@@ -19,20 +19,20 @@
 // MARK: - Fonts
 
 // swiftlint:disable identifier_name line_length type_body_length
-public enum AppFontFamily: Sendable {
+public enum GoolbitgIOSFontFamily: Sendable {
   public enum Pretendard: Sendable {
-    public static let black = AppFontConvertible(name: "Pretendard-Black", family: "Pretendard", path: "Pretendard-Black.otf")
-    public static let bold = AppFontConvertible(name: "Pretendard-Bold", family: "Pretendard", path: "Pretendard-Bold.otf")
-    public static let extraBold = AppFontConvertible(name: "Pretendard-ExtraBold", family: "Pretendard", path: "Pretendard-ExtraBold.otf")
-    public static let extraLight = AppFontConvertible(name: "Pretendard-ExtraLight", family: "Pretendard", path: "Pretendard-ExtraLight.otf")
-    public static let light = AppFontConvertible(name: "Pretendard-Light", family: "Pretendard", path: "Pretendard-Light.otf")
-    public static let medium = AppFontConvertible(name: "Pretendard-Medium", family: "Pretendard", path: "Pretendard-Medium.otf")
-    public static let regular = AppFontConvertible(name: "Pretendard-Regular", family: "Pretendard", path: "Pretendard-Regular.otf")
-    public static let semiBold = AppFontConvertible(name: "Pretendard-SemiBold", family: "Pretendard", path: "Pretendard-SemiBold.otf")
-    public static let thin = AppFontConvertible(name: "Pretendard-Thin", family: "Pretendard", path: "Pretendard-Thin.otf")
-    public static let all: [AppFontConvertible] = [black, bold, extraBold, extraLight, light, medium, regular, semiBold, thin]
+    public static let black = GoolbitgIOSFontConvertible(name: "Pretendard-Black", family: "Pretendard", path: "Pretendard-Black.otf")
+    public static let bold = GoolbitgIOSFontConvertible(name: "Pretendard-Bold", family: "Pretendard", path: "Pretendard-Bold.otf")
+    public static let extraBold = GoolbitgIOSFontConvertible(name: "Pretendard-ExtraBold", family: "Pretendard", path: "Pretendard-ExtraBold.otf")
+    public static let extraLight = GoolbitgIOSFontConvertible(name: "Pretendard-ExtraLight", family: "Pretendard", path: "Pretendard-ExtraLight.otf")
+    public static let light = GoolbitgIOSFontConvertible(name: "Pretendard-Light", family: "Pretendard", path: "Pretendard-Light.otf")
+    public static let medium = GoolbitgIOSFontConvertible(name: "Pretendard-Medium", family: "Pretendard", path: "Pretendard-Medium.otf")
+    public static let regular = GoolbitgIOSFontConvertible(name: "Pretendard-Regular", family: "Pretendard", path: "Pretendard-Regular.otf")
+    public static let semiBold = GoolbitgIOSFontConvertible(name: "Pretendard-SemiBold", family: "Pretendard", path: "Pretendard-SemiBold.otf")
+    public static let thin = GoolbitgIOSFontConvertible(name: "Pretendard-Thin", family: "Pretendard", path: "Pretendard-Thin.otf")
+    public static let all: [GoolbitgIOSFontConvertible] = [black, bold, extraBold, extraLight, light, medium, regular, semiBold, thin]
   }
-  public static let allCustomFonts: [AppFontConvertible] = [Pretendard.all].flatMap { $0 }
+  public static let allCustomFonts: [GoolbitgIOSFontConvertible] = [Pretendard.all].flatMap { $0 }
   public static func registerAllCustomFonts() {
     allCustomFonts.forEach { $0.register() }
   }
@@ -41,7 +41,7 @@ public enum AppFontFamily: Sendable {
 
 // MARK: - Implementation Details
 
-public struct AppFontConvertible: Sendable {
+public struct GoolbitgIOSFontConvertible: Sendable {
   public let name: String
   public let family: String
   public let path: String
@@ -85,8 +85,8 @@ public struct AppFontConvertible: Sendable {
   }
 }
 
-public extension AppFontConvertible.Font {
-  convenience init?(font: AppFontConvertible, size: CGFloat) {
+public extension GoolbitgIOSFontConvertible.Font {
+  convenience init?(font: GoolbitgIOSFontConvertible, size: CGFloat) {
     #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
     if !UIFont.fontNames(forFamilyName: font.family).contains(font.name) {
       font.register()

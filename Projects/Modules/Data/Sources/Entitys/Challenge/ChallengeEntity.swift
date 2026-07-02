@@ -8,7 +8,7 @@
 import Foundation
 import Domain
 
-public struct ChallengeEntity: Entity {
+public struct ChallengeEntity: Entity, Sendable {
     public let id: String
     public let imageUrl: URL?
     public let imageUrlLarge: URL?

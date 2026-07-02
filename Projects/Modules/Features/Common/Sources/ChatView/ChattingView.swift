@@ -42,9 +42,6 @@ public struct ChattingView: View {
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 store.send(.viewCycle(.willEnterForeground))
             }
-            .onDisappear {
-                store.send(.viewCycle(.onDisappear))
-            }
             .popup(item: $store.showErrorMessage.sending(\.showErrorMessage)) { message in
                 GBAlertView(model: .init(title: "ERROR", message: message, okTitle: "확인", alertStyle: .warning)) {}
                 okTouch: {

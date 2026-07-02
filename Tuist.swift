@@ -8,11 +8,5 @@
 import ProjectDescription
 
 let tuist = Tuist(
-    project: TuistProject.tuist(
-        plugins: [
-            .local(
-                path: .relativeToRoot("Plugins/TuistExtensions")
-            )
-        ]
-    )
+    project: TuistProject.tuist()
 )

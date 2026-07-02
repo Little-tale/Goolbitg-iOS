@@ -8,7 +8,7 @@
 import Foundation
 
 /// 살까말까 포스트 등록
-public struct BuyOrNotRequestModel: Encodable {
+public struct BuyOrNotRequestModel: Encodable, Sendable {
     public let productName: String
     public let productPrice: Int
     public let productImageUrl: String

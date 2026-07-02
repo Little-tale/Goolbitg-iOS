@@ -35,7 +35,7 @@ public struct PushListViewFeature: GBReducer {
         var ifOnAppear: Bool = false
     }
     
-    public enum Action {
+    public enum Action: Sendable {
         case viewCycle(ViewCycle)
         case viewEvent(ViewEvent)
         case featureEvent(FeatureEvent)
@@ -43,23 +43,23 @@ public struct PushListViewFeature: GBReducer {
         case delegate(Delegate)
         case cancel(TCACoordinatorCancelID)
         
-        public enum Delegate {
+        public enum Delegate: Sendable {
             case dismiss
         }
     }
     
-    public enum ViewCycle {
+    public enum ViewCycle: Sendable {
         case onAppear
     }
     
-    public enum ViewEvent {
+    public enum ViewEvent: Sendable {
         case selectedFilterCase(PushListFilterCase)
         case postListIndex(Int)
         case selectedItem(PushListItemEntity)
         case dismissTap
     }
     
-    public enum FeatureEvent {
+    public enum FeatureEvent: Sendable {
         case requestPushListItems
         case requestPushListItemsNextPage
         
@@ -78,7 +78,7 @@ public struct PushListViewFeature: GBReducer {
     }
     
     // MARK: TCA Coordinator 성능 문제로 인한 작업
-    public enum TCACoordinatorCancelID: Hashable, Equatable {
+    public enum TCACoordinatorCancelID: Hashable, Equatable, Sendable {
         case onAppear
         case requestCancel
     }

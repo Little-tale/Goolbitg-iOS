@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum DataLoadCase {
+public enum DataLoadCase: Sendable {
     case loading
     case loaded
     case empty

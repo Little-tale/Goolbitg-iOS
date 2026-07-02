@@ -148,6 +148,15 @@ extension ChallengeTabView {
                     }
                     store.send(.tabModeChanged(.groups))
                 }
+//                .asButton {
+//                    print("before", animationDirection, store.tabMode)
+//                    animationDirection = animationDirection == 1 ? 2 : 1
+//                    print("after", animationDirection)
+//                    store.send(.tabModeChanged(.groups))
+//                }
+//                .onChange(of: animationDirection) {
+//                    print("changed", $0)
+//                }
 //            #endif
             
             Spacer()
@@ -509,6 +518,9 @@ extension ChallengeTabView {
                 ScrollView {
                     loadingChallengeGroupListView
                 }
+            } else if store.groupChallengeList.isEmpty {
+                emptyGroupView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(Array(store.groupChallengeList.enumerated()), id: \.element.self) { index, item in
                     challengeGroupListView(item: item, index: index)

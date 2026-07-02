@@ -8,7 +8,7 @@
 import Foundation
 import Domain
 
-public enum APIErrorEntity: Int, Entity {
+public enum APIErrorEntity: Int, Entity, Sendable {
     
     // 일반 오류
     /// 입력 오류

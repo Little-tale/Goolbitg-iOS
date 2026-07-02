@@ -35,7 +35,7 @@ public struct ChallengeGroupDetailViewFeature: GBReducer {
         }
     }
     
-    public enum Action {
+    public enum Action: Sendable {
         case viewCycle(ViewCycle)
         case viewEvent(ViewEvent)
         case featureEvent(FeatureEvent)
@@ -43,22 +43,22 @@ public struct ChallengeGroupDetailViewFeature: GBReducer {
         // Binding
         case showErrorMessage(message: String?)
         
-        public enum Delegate {
+        public enum Delegate: Sendable {
             case back
             case goSettingView(ifOwner: Bool, roomID: String)
         }
     }
     
-    public enum ViewEvent {
+    public enum ViewEvent: Sendable {
         case settingButtonTapped
         case touchBottomSheetButton
     }
     
-    public enum ViewCycle {
+    public enum ViewCycle: Sendable {
         case onAppear
     }
     
-    public enum FeatureEvent {
+    public enum FeatureEvent: Sendable {
         case requestChallengeGroupDetail(groupID: String)
         case requestBottomSheetInfo(groupID: String)
         
@@ -75,7 +75,7 @@ public struct ChallengeGroupDetailViewFeature: GBReducer {
         case setRequestTrigger(Bool)
     }
     
-    private enum CancelID: Hashable {
+    private enum CancelID: Hashable, Sendable {
         case touchBottomSheetButton
     }
     
@@ -94,7 +94,9 @@ extension ChallengeGroupDetailViewFeature {
             switch action {
             // MARK: FeatureEvent
             case let .featureEvent(.requestChallengeGroupDetail(groupID)):
-                return .run { send in
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
+                return .run { [networkManager, challengeMapper, groupID] send in
                     let result = try await networkManager.requestNetworkWithRefresh(
                         dto: GroupChallengeDetailDTO.self,
                         router: ChallengeRouter.groupChallengeDetail(groupID: groupID)
@@ -129,8 +131,9 @@ extension ChallengeGroupDetailViewFeature {
                 }
                 
             case let .featureEvent(.requestBottomSheetInfo(groupID)):
-                
-                return .run { send in
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
+                return .run { [networkManager, challengeMapper, groupID] send in
                     let result = try await networkManager.requestNetworkWithRefresh(dto: ChallengeGroupTrippleDTO.self, router: ChallengeRouter.groupChallengeTripple(groupID: groupID))
                     
                     let mapping = challengeMapper.toMappingGroupChallengeTippleInfo(dto: result)
@@ -163,7 +166,8 @@ extension ChallengeGroupDetailViewFeature {
                 let id = state.groupId
 //                let scope = state.bottomSheetDateScope
                 state.ifRequestTripple = true
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager, id] send in
                     let result = try await networkManager.requestNotDtoNetwork(router: ChallengeRouter.groupChallengeCheck(groupID: id), ifRefreshNeed: true)
                     
                     if result {
@@ -226,11 +230,12 @@ extension ChallengeGroupDetailViewFeature {
             case .viewCycle(.onAppear):
                 if state.onAppearTrigger { return .none }
                 state.onAppearTrigger = true
+                let groupID = state.groupId
                 
-                return .run { [state] send in
-                    await send(.featureEvent(.requestChallengeGroupDetail(groupID: state.groupId)))
+                return .run { [groupID] send in
+                    await send(.featureEvent(.requestChallengeGroupDetail(groupID: groupID)))
                     
-                    await send(.featureEvent(.requestBottomSheetInfo(groupID: state.groupId)))
+                    await send(.featureEvent(.requestBottomSheetInfo(groupID: groupID)))
                 }
                 
             case .viewEvent(.settingButtonTapped):

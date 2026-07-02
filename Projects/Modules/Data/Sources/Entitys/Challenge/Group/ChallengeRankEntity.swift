@@ -8,7 +8,7 @@
 import Foundation
 import Domain
 
-public struct ChallengeRankEntity: Entity {
+public struct ChallengeRankEntity: Entity, Sendable {
     public let modelID: String
     public let imageURL: String?
     public let name: String

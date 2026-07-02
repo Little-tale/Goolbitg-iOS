@@ -11,13 +11,13 @@ import Foundation
 // MARK: - Swift Bundle Accessor for Frameworks
 private class BundleFinder {}
 extension Foundation.Bundle {
-/// Since App is a application, the bundle for classes within this module can be used directly.
-    static let module = Bundle(for: BundleFinder.self)
+/// Since Goolbitg-iOS is a application, the bundle for classes within this module can be used directly.
+    nonisolated static let module = Bundle(for: BundleFinder.self)
 }
 // MARK: - Objective-C Bundle Accessor
 @objc
-public class AppResources: NSObject {
-@objc public class var bundle: Bundle {
+public final class GoolbitgIOSResources: NSObject {
+@objc public nonisolated class var bundle: Bundle {
     return .module
 }
 }

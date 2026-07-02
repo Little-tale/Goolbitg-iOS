@@ -1,26 +1,4 @@
-//
-//  Project.swift
-//  AppManifests
-//
-//  Created by Jae hyung Kim on 5/21/25.
-//
-
-import TuistExtensions
 import ProjectDescription
+import ProjectDescriptionHelpers
 
-let homeFremeWork = Project.create(
-    config: FrameworkConfig(
-        name: Module.feature(.Home).frameWorkName,
-        deploymentTargets: AppConfig.deployTarget,
-        dependencies: [
-            Module.feature(.Common).projectTarget,
-            .tca,
-            .popupView
-        ],
-        sources: [
-            "Sources/**"
-        ]
-    )
-)
-
-//"Sources/**"
+let project = Project.module(moduleType: .feature(.Home))

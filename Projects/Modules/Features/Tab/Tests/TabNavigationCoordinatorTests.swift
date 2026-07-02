@@ -37,6 +37,7 @@ final class TabNavigationCoordinatorTests: XCTestCase {
         XCTAssertTrue(content.contains(".onChange(of: \\.path)"))
         XCTAssertTrue(content.contains("Coordinator chat teardown - path removal fallback"))
         XCTAssertTrue(content.contains("suppressNextChatPathRemovalDisconnect"))
-        XCTAssertTrue(content.contains("await repo.disconnectSocket(lease: removedLease)"))
+        XCTAssertTrue(content.contains("return chatTeardownEffect(sessionLease: removedLease)"))
+        XCTAssertTrue(content.contains("ChattingViewFeature.cancelSocketEffects(sessionLease: sessionLease)"))
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UserNickNameCheckReqeustModel: Encodable {
+public struct UserNickNameCheckReqeustModel: Encodable, Sendable {
     public let nickname: String
     
     public init(nickname: String) {

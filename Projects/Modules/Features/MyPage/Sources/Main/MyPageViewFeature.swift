@@ -151,7 +151,8 @@ extension MyPageViewFeature {
                 return .send(.featureEvent(.requestLogOut))
                 
             case let .viewEvent(.serviceSectionItemTapped(item)):
-                return .run { _ in
+                let moveURLManager = self.moveURLManager
+                return .run { [item, moveURLManager] _ in
                     switch item {
                     case .appVersion:
                         break
@@ -164,7 +165,7 @@ extension MyPageViewFeature {
                     }
                 }
             case let .viewEvent(.consumptionHabitSectionItemTapped(item)):
-                return .run { send in
+                return .run { [item] send in
                     switch item {
                     case .analysisPatternHabitFormation:
                         await send(.delegate(.habitChartMoveTapped))

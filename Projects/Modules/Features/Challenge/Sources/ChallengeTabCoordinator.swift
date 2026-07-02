@@ -15,7 +15,7 @@ public struct ChallengeTabCoordinator {
 
     @ObservableState
     public struct State: Equatable {
-        public static let initialState = State()
+        public static var initialState: State { State() }
 
         var home = ChallengeTabFeature.State()
         var groupChallengeCreate: GroupChallengeCreateViewFeature.State?

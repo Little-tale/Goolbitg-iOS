@@ -8,7 +8,7 @@
 import Foundation
 
 /// Login
-public struct AuthLoginRequestModel: Encodable {
+public struct AuthLoginRequestModel: Encodable, Sendable {
     public let type: String
     public let idToken: String
     

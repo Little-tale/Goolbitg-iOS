@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UserPatternRequestModel: Encodable {
+public struct UserPatternRequestModel: Encodable, Sendable {
     /*
      primeUseDay
      다음 요소중 하나:

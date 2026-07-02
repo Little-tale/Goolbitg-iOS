@@ -46,6 +46,7 @@ Projects/Modules/DemoApps/IntroApp/Derived/
 
 ## Obj-C/Swift specific
 *.hmap
+Projects/**/Derived/ModuleMaps/*.modulemap
 
 ## App packaging
 *.ipa

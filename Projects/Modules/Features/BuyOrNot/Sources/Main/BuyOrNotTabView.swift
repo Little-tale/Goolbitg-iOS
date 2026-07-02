@@ -205,15 +205,24 @@ private extension BuyOrNotTabView {
             .frame(height: cardViewHeight)
             .padding(.bottom, 24)
 
-            BuyOrNotVoteView(model: store.currentList[safe: store.currentIndex]) {
-                store.send(.viewEvent(.likeButtonTapped(store.currentList[safe: store.currentIndex], index: store.currentIndex)))
+            BuyOrNotVoteView(model: selectedVoteModel) {
+                store.send(.viewEvent(.likeButtonTapped(selectedVoteModel, index: selectedVoteIndex)))
             } onDislike: {
-                store.send(.viewEvent(.disLikeButtonTapped(store.currentList[safe: store.currentIndex], index: store.currentIndex)))
+                store.send(.viewEvent(.disLikeButtonTapped(selectedVoteModel, index: selectedVoteIndex)))
             }
 
             Color.clear
                 .frame(height: safeAreaInsets.bottom)
         }
+    }
+
+    var selectedVoteIndex: Int {
+        guard !store.currentList.isEmpty else { return 0 }
+        return min(max(store.currentIndex, 0), store.currentList.count - 1)
+    }
+
+    var selectedVoteModel: BuyOrNotCardViewEntity? {
+        store.currentList[safe: selectedVoteIndex]
     }
 
     func performModifyAction() {

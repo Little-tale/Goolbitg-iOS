@@ -16,7 +16,7 @@ public struct MyPageTabCoordinator {
     
     @ObservableState
     public struct State: Equatable {
-        public static let initialState = State()
+        public static var initialState: State { State() }
 
         var home = MyPageViewFeature.State()
         var revokePage: RevokeFeature.State?
@@ -40,13 +40,14 @@ public struct MyPageTabCoordinator {
         Scope(state: \.home, action: \.home) {
             MyPageViewFeature()
         }
-        core
+        EmptyReducer()
             .ifLet(\.revokePage, action: \.revokePage) {
                 RevokeFeature()
             }
             .ifLet(\.pushList, action: \.pushList) {
                 PushListViewFeature()
             }
+        core
     }
 }
 

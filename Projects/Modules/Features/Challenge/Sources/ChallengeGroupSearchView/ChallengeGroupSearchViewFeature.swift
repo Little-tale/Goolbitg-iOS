@@ -75,7 +75,7 @@ public struct ChallengeGroupSearchViewFeature: GBReducer {
         case updateGroupChallengePagingObj(totalSize: Int, totalPages: Int, page: Int, size: Int)
     }
     
-    public enum CancelID: String, Hashable {
+    public enum CancelID: String, Hashable, Sendable {
         case searchItem
         case paging
         case onAppear
@@ -146,8 +146,9 @@ extension ChallengeGroupSearchViewFeature {
                     return .send(.selectedRoomPopupComponentBinding(nil))
                 }
                 let passwd = state.popupPasswordText.isEmpty ? nil : state.popupPasswordText
+                let networkManager = self.networkManager
                 
-                return .run { send in
+                return .run { [networkManager, id, passwd] send in
                     let result = try await networkManager.requestNotDtoNetwork(
                         router: ChallengeRouter.groupChallengeJoin(groupID: id, passwd: passwd),
                         ifRefreshNeed: true
@@ -240,8 +241,10 @@ extension ChallengeGroupSearchViewFeature {
                 state.apiLoadTrigger = true
                 
                 let pagingObj = state.groupChallengePagingObj
+                let networkManager = self.networkManager
+                let challengeMapper = self.challengeMapper
                 
-                return .run { send in
+                return .run { [networkManager, challengeMapper, pagingObj, append] send in
                     let result = try await networkManager
                         .requestNetworkWithRefresh(
                             dto: ChallengeListDTO<GroupChallengeDTO>.self,

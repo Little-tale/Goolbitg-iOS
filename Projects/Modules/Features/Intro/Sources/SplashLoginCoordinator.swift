@@ -18,7 +18,7 @@ public struct SplashLoginCoordinator {
     
     @ObservableState
     public struct State: Equatable {
-        public static let initialState = State()
+        public static var initialState: State { State() }
 
         public var splash = SplashFeature.State()
         public var path = StackState<Path.State>()
@@ -91,7 +91,8 @@ extension SplashLoginCoordinator {
                 return checkLoginState(&state)
                 
             case .checkToRefresh:
-                return .run { send in
+                let networkManager = self.networkManager
+                return .run { [networkManager] send in
                     
                     try await networkManager.tryRefresh()
                     
@@ -114,7 +115,7 @@ extension SplashLoginCoordinator {
                 return checkUserRegistration(state: &state)
                 
             case .failRefresh:
-                state.path.append(.login(LoginViewFeature.State()))
+                moveToLogin(state: &state)
                  
             case let .path(.element(id: _, action: .login(.delegate(.moveToOnBoarding(caseOf))))):
                 Logger.info(caseOf)
@@ -150,8 +151,7 @@ extension SplashLoginCoordinator {
                 state.path.removeAll()
 
             case .showLogin:
-                state.path.removeAll()
-                state.path.append(.login(LoginViewFeature.State()))
+                moveToLogin(state: &state)
 
             case .openUserInfoRequest:
                 state.path.append(.userInfoRequestView(AuthRequestFeature.State()))
@@ -177,8 +177,13 @@ extension SplashLoginCoordinator {
                 }
                 
             case let .checkToMoveScreen(caseOf):
-                return .run { send in
-                    if await checkAuthState() {
+                let albumAuthManager = self.albumAuthManager
+                let pushNotiManager = self.pushNotiManager
+                return .run { [albumAuthManager, pushNotiManager, caseOf] send in
+                    if await Self.checkAuthState(
+                        albumAuthManager: albumAuthManager,
+                        pushNotiManager: pushNotiManager
+                    ) {
                         await send(.moveToScreen(.authRequest))
                     } else {
                         switch caseOf {
@@ -215,15 +220,22 @@ extension SplashLoginCoordinator {
             // accessToken 이 존재한다면 재 갱신 시도
             return .send(.checkToRefresh)
         } else {
-            state.path.removeAll()
-            state.path.append(.login(LoginViewFeature.State()))
+            moveToLogin(state: &state)
         }
         return .none
+    }
+
+    private func moveToLogin(state: inout State) {
+        state.path.removeAll()
+        state.path.append(.login(LoginViewFeature.State()))
     }
     
     /// 앱 권한 허용 여부 판단
     /// - Returns: true 일때 권한 요청 페이지 false 면 딥링크 따라 바로
-    private func checkAuthState() async -> Bool {
+    private static func checkAuthState(
+        albumAuthManager: AlbumAuthManager,
+        pushNotiManager: PushNotiManager
+    ) async -> Bool {
         if UserDefaultsManager.firstDevice {
             let _ = albumAuthManager.currentAlbumPermission() == .noOnce
             let noti = await pushNotiManager.getNotificationCurrentSetting() == .noOnce
@@ -236,7 +248,8 @@ extension SplashLoginCoordinator {
     }
     
     private func checkUserRegistration(state: inout State) -> EffectOf<Self> {
-        return .run { send in
+        let networkManager = self.networkManager
+        return .run { [networkManager] send in
             let requestRegisterState = try await networkManager.requestNetworkWithRefresh(dto: UserRegisterStatus.self, router: UserRouter.userRegisterStatus)
             
             Logger.info(requestRegisterState)

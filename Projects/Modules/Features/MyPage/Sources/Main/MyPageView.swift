@@ -467,7 +467,7 @@ extension MyPageView {
     }
 }
 
-public enum MyHabitSectionType: CaseIterable {
+public enum MyHabitSectionType: CaseIterable, Sendable {
     case analysisPatternHabitFormation
     
     var title: String {
@@ -485,7 +485,7 @@ public enum MyHabitSectionType: CaseIterable {
     }
 }
 
-public enum AccountSectionType: CaseIterable {
+public enum AccountSectionType: CaseIterable, Sendable {
     case accountID
     
     var title: String {
@@ -510,7 +510,7 @@ public enum AccountSectionType: CaseIterable {
     }
 }
 
-public enum ServiceInfoSectionType: CaseIterable {
+public enum ServiceInfoSectionType: CaseIterable, Sendable {
     case appVersion
     case request
     case serviceInfo
@@ -564,4 +564,3 @@ public enum ServiceInfoSectionType: CaseIterable {
     }))
 }
 #endif
-

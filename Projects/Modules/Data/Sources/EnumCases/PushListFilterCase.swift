@@ -8,7 +8,7 @@
 import Foundation
 import Domain
 
-public enum PushListFilterCase: Entity, CaseIterable {
+public enum PushListFilterCase: Entity, CaseIterable, Sendable {
     case all
     case challenge
     case voteResult

@@ -6,10 +6,11 @@
 //
 
 import ProjectDescription
+import ProjectDescriptionHelpers
 
 private let appEntitlementsPath: Entitlements = .file(
     path: .relativeToRoot(
-        "AppSettingFiles/Entitlements/\(AppConfig.noTuistAppName).entitlements"
+        "AppSettingFiles/Entitlements/\(AppConfig.appName).entitlements"
     )
 )
 
@@ -41,7 +42,7 @@ extension Project {
             return Project(
                 name: name,
                 packages: config.packages,
-                settings: .swift6Settings(disPlayName: subAppName),
+                settings: .appSettings(),
                 targets: targets + config.customTargets,
                 schemes: Scheme.schemes(name: name, root: subAppName == nil),
                 resourceSynthesizers: [

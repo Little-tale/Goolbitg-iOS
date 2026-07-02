@@ -23,7 +23,7 @@ public struct TabNavigationCoordinator {
 
     @ObservableState
     public struct State: Equatable {
-        public static let initialState = State()
+        public static var initialState: State { State() }
 
         var tabView = GBTabBarCoordinator.State()
         var path = StackState<Path.State>()
@@ -104,12 +104,9 @@ extension TabNavigationCoordinator {
                 let sessionLease = chatSessionLease(in: state.path)
                 state.suppressNextChatPathRemovalDisconnect = true
                 state.path.removeLast()
-                let repo = chatRepository
                 Logger.debug("Coordinator chat teardown - explicit back")
-                return .run { _ in
-                    guard let sessionLease else { return }
-                    await repo.disconnectSocket(lease: sessionLease)
-                }
+                guard let sessionLease else { return .none }
+                return chatTeardownEffect(sessionLease: sessionLease)
 
             case .path(.element(id: _, action: .buyOrNotAdd(.delegate(.dismiss)))):
                 state.path.removeLast()
@@ -198,12 +195,19 @@ extension TabNavigationCoordinator {
                 return .none
             }
 
-            let repo = chatRepository
             Logger.debug("Coordinator chat teardown - path removal fallback")
-            return .run { _ in
-                await repo.disconnectSocket(lease: removedLease)
-            }
+            return chatTeardownEffect(sessionLease: removedLease)
         }
+    }
+
+    private func chatTeardownEffect(sessionLease: UUID) -> Effect<Action> {
+        let repo = chatRepository
+        return .merge(
+            ChattingViewFeature.cancelSocketEffects(sessionLease: sessionLease),
+            .run { _ in
+                await repo.disconnectSocket(lease: sessionLease)
+            }
+        )
     }
 
     private func hasChatPath(

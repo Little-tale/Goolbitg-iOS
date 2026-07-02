@@ -1,5 +1,5 @@
-import TuistExtensions
 import ProjectDescription
+import ProjectDescriptionHelpers
 import Foundation
 
 let workSpace = Workspace(
@@ -8,10 +8,6 @@ let workSpace = Workspace(
         [
             AppConfig.appPath,
             DomainConfig.path,
-        ] + Module.modules.map(
-            \.path
-        ) + DemoApps.allCases.map(
-            \.onlyTargetPath
-        )
+        ] + Module.modules.map(\.path) + DemoApps.allCases.map(\.onlyTargetPath)
     )
 )

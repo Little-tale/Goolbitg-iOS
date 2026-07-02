@@ -8,7 +8,7 @@
 import Foundation
 
 /// SignUp
-public struct AuthRegisterRequestModel: Encodable {
+public struct AuthRegisterRequestModel: Encodable, Sendable {
     /// ex) KAKAO - APPLE
     public let type: String
     public let idToken: String

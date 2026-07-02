@@ -27,6 +27,10 @@ public struct SplashFeature {
     public enum ViewCycle {
         case onAppear
     }
+
+    private enum CancelID {
+        case finish
+    }
     
     public var body : some ReducerOf<Self> {
         Reduce { state, action in
@@ -36,6 +40,7 @@ public struct SplashFeature {
                     try? await Task.sleep(for: .seconds(2))
                     await send(.delegate(.finish))
                 }
+                .cancellable(id: CancelID.finish, cancelInFlight: true)
             default:
                 break
             }

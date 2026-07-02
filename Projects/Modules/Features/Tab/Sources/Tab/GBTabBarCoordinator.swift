@@ -38,7 +38,7 @@ public struct GBTabBarCoordinator {
     
     @ObservableState
     public struct State: Equatable {
-        public static let initialState = State()
+        public static var initialState: State { State() }
         
         var currentTab: TabCase = .homeTab
         
@@ -96,6 +96,9 @@ extension GBTabBarCoordinator {
                 
             case let .currentTab(tabCase):
                 state.currentTab = tabCase
+                if tabCase == .myPageTab {
+                    return .send(.myPageTabAction(.home(.featureEvent(.requestUserInfo))))
+                }
                 
             case .challengeTabAction(.delegate(.tabbarHidden)):
                 state.tabbarHidden = true

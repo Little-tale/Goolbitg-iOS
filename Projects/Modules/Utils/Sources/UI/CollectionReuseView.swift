@@ -13,6 +13,7 @@ public enum CollectionReuseSizing {
     case estimated(CGSize)
 }
 
+@MainActor
 public struct CollectionReuseView<Item: Identifiable, CellContent: View>: View where Item.ID: Hashable {
 
     private let items: [Item]
@@ -287,6 +288,7 @@ private final class ReuseHostingCell: UICollectionViewCell {
         currentID = nil
     }
 
+    @MainActor
     deinit {
         eventHandler?(.deinitCell)
     }

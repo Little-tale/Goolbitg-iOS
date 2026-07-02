@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ParticipationAlertViewComponents: Equatable, Hashable {
+public struct ParticipationAlertViewComponents: Equatable, Hashable, Sendable {
     public let title: String
     public let hashTags: [String]
     public let isHidden: Bool

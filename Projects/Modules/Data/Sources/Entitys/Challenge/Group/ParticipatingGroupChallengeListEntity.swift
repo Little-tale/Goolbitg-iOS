@@ -9,7 +9,7 @@ import Foundation
 import Domain
 
 /// 참여중인 그룹 챌린지 List Entity
-public struct ParticipatingGroupChallengeListEntity: Entity {
+public struct ParticipatingGroupChallengeListEntity: Entity, Sendable {
     
     /// Challenge Group ID
     public let id: Int
